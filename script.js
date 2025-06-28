@@ -18,39 +18,58 @@ const prevBtn = $("prevBtn");
 let currentPage = 1;
 let currentQuery = "";
 let isSearchMode = false;
+let totalPages = Infinity;
 const cache = new Map();
+
+// === Debounce Utility ===
+function debounce(fn, delay = 500) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
 
 // === Load Initial Movies ===
 document.addEventListener("DOMContentLoaded", () => {
   fetchAndRender(ENDPOINTS.discover, currentPage);
 });
 
-// === Form Search ===
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const term = searchInput.value.trim();
-
-  if (term) {
-    currentQuery = term;
-    isSearchMode = true;
-    currentPage = 1;
-    fetchAndRender(`${ENDPOINTS.search}${currentQuery}`, currentPage);
-    searchInput.value = "";
-    searchInput.focus();
-  }
-});
+// === Input Debounced Search ===
+searchInput.addEventListener(
+  "input",
+  debounce(() => {
+    const term = searchInput.value.trim();
+    if (term) {
+      currentQuery = term;
+      isSearchMode = true;
+      currentPage = 1;
+      fetchAndRender(`${ENDPOINTS.search}${encodeURIComponent(currentQuery)}`, currentPage);
+    } else {
+      isSearchMode = false;
+      currentPage = 1;
+      fetchAndRender(ENDPOINTS.discover, currentPage);
+    }
+  }, 600)
+);
 
 // === Pagination Events ===
 nextBtn.addEventListener("click", () => {
-  currentPage++;
-  const baseURL = isSearchMode ? `${ENDPOINTS.search}${currentQuery}` : ENDPOINTS.discover;
-  fetchAndRender(baseURL, currentPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    const baseURL = isSearchMode
+      ? `${ENDPOINTS.search}${encodeURIComponent(currentQuery)}`
+      : ENDPOINTS.discover;
+    fetchAndRender(baseURL, currentPage);
+  }
 });
 
 prevBtn.addEventListener("click", () => {
   if (currentPage > 1) {
     currentPage--;
-    const baseURL = isSearchMode ? `${ENDPOINTS.search}${currentQuery}` : ENDPOINTS.discover;
+    const baseURL = isSearchMode
+      ? `${ENDPOINTS.search}${encodeURIComponent(currentQuery)}`
+      : ENDPOINTS.discover;
     fetchAndRender(baseURL, currentPage);
   }
 });
@@ -62,10 +81,13 @@ async function fetchAndRender(baseURL, page = 1) {
     : `${baseURL}&page=${page}`;
 
   updatePaginationButtons();
-  main.innerHTML = `<p style="text-align:center;">Loading...</p>`;
+  showSkeletonLoading();
 
   if (cache.has(url)) {
-    renderMovies(cache.get(url));
+    const data = cache.get(url);
+    totalPages = data.total_pages || Infinity;
+    renderMovies(data.results);
+    updatePaginationButtons();
     return;
   }
 
@@ -74,11 +96,27 @@ async function fetchAndRender(baseURL, page = 1) {
     if (!res.ok) throw new Error("Fetch failed");
 
     const data = await res.json();
-    cache.set(url, data.results);
+    cache.set(url, data);
+    totalPages = data.total_pages || Infinity;
     renderMovies(data.results);
+    updatePaginationButtons();
   } catch (err) {
     console.error(err);
     main.innerHTML = `<p style="color:red; text-align:center;">Gagal mengambil data.</p>`;
+  }
+}
+
+// === Skeleton Loading ===
+function showSkeletonLoading() {
+  main.innerHTML = "";
+  for (let i = 0; i < 8; i++) {
+    const skeleton = document.createElement("div");
+    skeleton.className = "card skeleton";
+    skeleton.innerHTML = `
+      <div style="background:#ccc; height:300px;"></div>
+      <div class="card-content"><h3 style="background:#eee; height:1em; width:80%; margin:10px auto;"></h3></div>
+    `;
+    main.appendChild(skeleton);
   }
 }
 
@@ -119,6 +157,8 @@ function renderMovies(movies) {
   main.appendChild(fragment);
 }
 
+// === Pagination Control ===
 function updatePaginationButtons() {
   prevBtn.disabled = currentPage <= 1;
+  nextBtn.disabled = currentPage >= totalPages;
 }
