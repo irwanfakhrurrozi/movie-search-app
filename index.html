@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Search App</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="topnav">
+    <a href="#" class="logo">🎬 Movies</a>
+
+    <!-- Search Form: Mobile-friendly, vertically stacked if needed -->
+    <form id="form" class="search-container" role="search">
+      <input
+        type="text"
+        id="query"
+        name="query"
+        placeholder="Search for a movie..."
+        autocomplete="off"
+        aria-label="Search movies"
+      />
+      <button type="submit" id="searchBtn" aria-label="Search">🔍</button>
+    </form>
+  </header>
+
+  <main>
+    <!-- Movie List -->
+    <section id="section" class="movie-section" aria-live="polite">
+      <!-- Movie cards injected via JavaScript -->
+    </section>
+
+    <!-- Pagination -->
+    <nav class="pagination" aria-label="Page navigation">
+      <button id="prevBtn" aria-label="Previous page">⬅️ Prev</button>
+      <button id="nextBtn" aria-label="Next page">Next ➡️</button>
+    </nav>
+  </main>
+
+  <script src="script.js"></script>
+  
+</body>
+</html>
