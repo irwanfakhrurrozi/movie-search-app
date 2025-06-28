@@ -18,7 +18,7 @@ Features include fuzzy search (like Google), responsive UI, and pagination.
 1. Clone this repo
 2. Open `index.html` in your browser
 
-## 🌐 Live Demo
-*(Add GitHub Pages or Netlify link if available)*
+## 🖼️ Screenshot
 
----
+![Movie Search Screenshot](assets/screenshot.PNG)
+
